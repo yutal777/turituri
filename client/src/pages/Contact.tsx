@@ -106,7 +106,13 @@ export default function Contact() {
           {/* Footer */}
           <div className="mt-24 pt-16 border-t border-black/20">
             <p className="text-black/60 text-sm">
-              © 2024 한튜리. All rights reserved.
+              © 2024 한튜리. All rights reserved. |
+              <a
+                href="/admin-login"
+                className="text-black/60 hover:text-black transition-colors ml-2"
+              >
+                rights
+              </a>
             </p>
           </div>
         </section>

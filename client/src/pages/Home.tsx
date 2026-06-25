@@ -1,4 +1,3 @@
-import { useLocation } from "wouter";
 import { ChevronDown } from "lucide-react";
 import { useState, useEffect } from "react";
 import Navigation from "@/components/Navigation";
@@ -14,7 +13,6 @@ import Navigation from "@/components/Navigation";
  */
 
 export default function Home() {
-  const [, navigate] = useLocation();
   const [showScroll, setShowScroll] = useState(true);
 
   useEffect(() => {

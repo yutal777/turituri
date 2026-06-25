@@ -9,16 +9,22 @@ import About from "./pages/About";
 import Work from "./pages/Work";
 import Blog from "./pages/Blog";
 import Contact from "./pages/Contact";
-
+import WorkDetail from "./pages/WorkDetail";
+import AdminLogin from "./pages/AdminLogin";
+import Admin from "./pages/Admin";
 
 function Router() {
+  // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
       <Route path={"/"} component={Home} />
       <Route path={"/about"} component={About} />
       <Route path={"/work"} component={Work} />
+      <Route path={"/work/:id"} component={WorkDetail} />
       <Route path={"/blog"} component={Blog} />
       <Route path={"/contact"} component={Contact} />
+      <Route path={"/admin-login"} component={AdminLogin} />
+      <Route path={"/admin"} component={Admin} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
