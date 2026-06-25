@@ -1,7 +1,6 @@
 {
   "buildCommand": "pnpm build",
   "outputDirectory": "dist",
-  "framework": "other",
   "env": {
     "DATABASE_URL": "@database_url",
     "JWT_SECRET": "@jwt_secret",
@@ -12,5 +11,15 @@
       "memory": 1024,
       "maxDuration": 60
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "server/_core/index.ts"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
