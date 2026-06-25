@@ -39,11 +39,8 @@ export default function Home() {
           </div>
 
           <div className="mb-20 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-            <h1 className="text-6xl sm:text-7xl md:text-8xl font-black leading-none mb-8">
-              HELLO,
-            </h1>
             <h1 className="text-6xl sm:text-7xl md:text-8xl font-black leading-none">
-              I'M 한튜리
+              HANTURI PORTFOLIO
             </h1>
           </div>
 
@@ -69,10 +66,9 @@ export default function Home() {
                 SPECIALIZATION
               </h3>
               <div className="space-y-3">
-                <p className="text-base font-medium">Motion Graphics</p>
-                <p className="text-base font-medium">Visual Identity</p>
-                <p className="text-base font-medium">3D Animation</p>
-                <p className="text-base font-medium">UI/UX Design</p>
+                <p className="text-base font-medium">2D/3D Motion Graphics</p>
+                <p className="text-base font-medium">VFX</p>
+                <p className="text-base font-medium">DI</p>
               </div>
             </div>
 
@@ -92,7 +88,7 @@ export default function Home() {
 
           <div className="mt-16 pt-16 border-t border-black/20">
             <p className="text-black/60 text-sm">
-              © 2024 한튜리. All rights reserved.
+              © 2026 한튜리. All rights reserved.
             </p>
           </div>
         </section>

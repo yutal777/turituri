@@ -56,7 +56,7 @@ export default function Contact() {
 
             <div className="space-y-6">
               <a
-                href="https://instagram.com"
+                href="https://www.instagram.com/hanturi777/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-4 group"
@@ -68,7 +68,7 @@ export default function Contact() {
               </a>
 
               <a
-                href="https://x.com"
+                href="https://x.com/hanturi8"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-4 group"
@@ -80,7 +80,7 @@ export default function Contact() {
               </a>
 
               <a
-                href="https://youtube.com"
+                href="https://www.youtube.com/@Hanturi"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-4 group"
@@ -106,7 +106,7 @@ export default function Contact() {
           {/* Footer */}
           <div className="mt-24 pt-16 border-t border-black/20">
             <p className="text-black/60 text-sm">
-              © 2024 한튜리. All rights reserved. |
+              © 2026 한튜리. All rights reserved. |
               <a
                 href="/admin-login"
                 className="text-black/60 hover:text-black transition-colors ml-2"

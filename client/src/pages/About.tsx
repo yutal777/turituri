@@ -125,7 +125,7 @@ export default function About() {
         <section className="max-w-7xl mx-auto px-8">
           <div className="pt-16 border-t border-black/20">
             <p className="text-black/60 text-sm">
-              © 2024 한튜리. All rights reserved.
+              © 2026 한튜리. All rights reserved.
             </p>
           </div>
         </section>
