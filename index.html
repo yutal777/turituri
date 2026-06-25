@@ -1,1 +1,1139 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  ArrowRight, 
+  Instagram, 
+  Twitter, 
+  Youtube, 
+  Mail, 
+  ExternalLink, 
+  Settings, 
+  RefreshCw, 
+  Grid, 
+  CheckCircle, 
+  AlertCircle,
+  Play,
+  Monitor,
+  Cpu,
+  Layers,
+  Sparkles,
+  ArrowUpRight
+} from 'lucide-react';
 
+
+// 로컬 테스트 및 Supabase 연결 전용 고품질 폴백 데이터 (모션그래픽 디자이너 테마)
+const FALLBACK_BANNER_TEXT = "HELLO, I'M HANTURI";
+
+const FALLBACK_PROJECTS = [
+  {
+    id: 1,
+    title: "NEON VOID: KINETIC TYPOGRAPHY",
+    description: "After Effects와 Blender를 활용한 사이버펑크 스타일의 메카닉 타이포그래피 비디오 아트워크.",
+    image_url: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=800&q=80",
+    tags: ["After Effects", "Blender", "Kinetic"],
+    year: "2026"
+  },
+  {
+    id: 2,
+    title: "FLUID METAMORPHOSIS 3D",
+    description: "Blender와 AI 생성 텍스처를 결합한 초현실적 액체 금속 유체 시뮬레이션 및 모션 루프.",
+    image_url: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
+    tags: ["Blender", "3D Simulation", "AI Texturing"],
+    year: "2025"
+  },
+  {
+    id: 3,
+    title: "CONCRETE JUNGLE BRAND FILM",
+    description: "도시의 기하학적 구조물과 유기적 타이포그래피의 조화를 다룬 브랜드 모션 그래픽 필름.",
+    image_url: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80",
+    tags: ["Premiere Pro", "After Effects", "Concept Design"],
+    year: "2025"
+  },
+  {
+    id: 4,
+    title: "CHRONOS - TIMELESS FLOW",
+    description: "시간의 영속성을 모티브로 한 앰비언트 사운드 기반의 미니멀 추상 모션 그래픽 시리즈.",
+    image_url: "https://images.unsplash.com/photo-1508739773434-c26b3d09e071?auto=format&fit=crop&w=800&q=80",
+    tags: ["Cinema 4D", "After Effects", "Sound Design"],
+    year: "2026"
+  }
+];
+
+const SOCIAL_MOCK_FEEDS = [
+  {
+    id: "sns-1",
+    platform: "instagram",
+    username: "@hanturi.design",
+    content: "Blender 4.2 신기능 써보는 중! 신규 노드로 유체 표현이 정말 쉬워졌네요. 다음 포트폴리오 작업에 적용할 예정 🌊💻 #3d #blender #motiongraphics",
+    image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80",
+    likes: "1,248",
+    comments: "42",
+    date: "2일 전"
+  },
+  {
+    id: "sns-2",
+    platform: "twitter",
+    username: "@hanturi_motion",
+    content: "이번에 런칭된 새로운 AI 모션 툴 테스트 해봄. After Effects와의 워크플로우 호환성이 완벽해서 작업 시간이 대폭 단축될 듯. 기술 발전 속도가 소름돋는다.. #AIVideo #AfterEffects",
+    image: null,
+    likes: "342",
+    comments: "12",
+    date: "3일 전"
+  },
+  {
+    id: "sns-3",
+    platform: "instagram",
+    username: "@hanturi.design",
+    content: "작년에 작업했던 브랜드 모션그래픽 필름이 디자인 어워드 후보에 올랐습니다! 아낌없이 지원해주신 모든 팀원분들 감사드립니다 🏆✨ #motiondesign #branding",
+    image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=600&q=80",
+    likes: "2,091",
+    comments: "85",
+    date: "1주 전"
+  },
+  {
+    id: "sns-4",
+    platform: "youtube",
+    username: "한튜리 Hanturi",
+    content: "[튜토리얼 프리뷰] 초보자도 쉽게 따라하는 Blender 유체 역학 & 모션 연동 핵심 요약 가이드. 풀버전은 채널에 업로드 되었습니다!",
+    image: "https://images.unsplash.com/photo-1508739773434-c26b3d09e071?auto=format&fit=crop&w=600&q=80",
+    likes: "5,410",
+    comments: "132",
+    date: "2주 전"
+  }
+];
+
+export default function App() {
+  const [currentPage, setCurrentPage] = useState('home');
+  const [projects, setProjects] = useState(FALLBACK_PROJECTS);
+  const [bannerText, setBannerText] = useState(FALLBACK_BANNER_TEXT);
+  const [loading, setLoading] = useState(false);
+  const [dbStatus, setDbStatus] = useState('demo'); // 'demo' | 'connected' | 'error'
+  
+  // Supabase 실시간 입력창용 로컬 상태 (웹사이트 안에서 즉시 연결 상태를 바꿀 수 있는 치트키 패널)
+  const [supabaseUrl, setSupabaseUrl] = useState(import.meta.env?.VITE_SUPABASE_URL || '');
+  const [supabaseAnonKey, setSupabaseAnonKey] = useState(import.meta.env?.VITE_SUPABASE_ANON_KEY || '');
+  const [showConfigPanel, setShowConfigPanel] = useState(false);
+  const [socialFilter, setSocialFilter] = useState('all');
+  const [isRefreshingFeed, setIsRefreshingFeed] = useState(false);
+  
+  // 메일 문의 폼 상태
+  const [contactName, setContactName] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactMessage, setContactMessage] = useState('');
+  const [contactSuccess, setContactSuccess] = useState(false);
+
+
+  // Supabase Rest API 직접 호출 함수 (패키지 설치 없이 완벽 호환 구현)
+  const fetchSupabaseData = async (url, key) => {
+    if (!url || !key) return;
+    setLoading(true);
+    try {
+      // 1. site_settings 테이블 조회
+      const settingsRes = await fetch(`${url}/rest/v1/site_settings?select=key,value`, {
+        headers: {
+          'apikey': key,
+          'Authorization': `Bearer ${key}`
+        }
+      });
+      if (settingsRes.ok) {
+        const settings = await settingsRes.json();
+        const bannerObj = settings.find(s => s.key === 'main_banner_text');
+        if (bannerObj) {
+          setBannerText(bannerObj.value);
+        }
+      }
+
+      // 2. projects 테이블 조회
+      const projectsRes = await fetch(`${url}/rest/v1/projects?select=*`, {
+        headers: {
+          'apikey': key,
+          'Authorization': `Bearer ${key}`
+        }
+      });
+      if (projectsRes.ok) {
+        const projectsData = await projectsRes.json();
+        if (projectsData && projectsData.length > 0) {
+          setProjects(projectsData);
+          setDbStatus('connected');
+        } else {
+          // 데이터가 비었으면 로컬 데이터 대체 활용
+          setProjects(FALLBACK_PROJECTS);
+          setDbStatus('connected');
+        }
+      } else {
+        throw new Error("Failed to fetch projects");
+      }
+    } catch (err) {
+      console.error("Supabase 연동 실패:", err);
+      setDbStatus('error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 마운트 시 최초 실행 (환경 변수가 있을 경우 자동 연결)
+  useEffect(() => {
+    if (supabaseUrl && supabaseAnonKey) {
+      fetchSupabaseData(supabaseUrl, supabaseAnonKey);
+    }
+  }, []);
+
+  const handleConnectSupabase = (e) => {
+    e.preventDefault();
+    if (!supabaseUrl || !supabaseAnonKey) {
+      alert("URL과 API Key를 입력해주세요.");
+      return;
+    }
+    fetchSupabaseData(supabaseUrl, supabaseAnonKey);
+  };
+
+  const handleDisconnect = () => {
+    setSupabaseUrl('');
+    setSupabaseAnonKey('');
+    setProjects(FALLBACK_PROJECTS);
+    setBannerText(FALLBACK_BANNER_TEXT);
+    setDbStatus('demo');
+  };
+
+  const triggerFeedRefresh = () => {
+    setIsRefreshingFeed(true);
+    setTimeout(() => {
+      setIsRefreshingFeed(false);
+    }, 1200);
+  };
+
+  const filteredFeeds = socialFilter === 'all' 
+    ? SOCIAL_MOCK_FEEDS 
+    : SOCIAL_MOCK_FEEDS.filter(feed => feed.platform === socialFilter);
+
+
+  // 메인 화면용 고급스럽고 우아한 모션 그래픽 배경 캔버스 (디자이너 아이덴티티 향상)
+  const MotionCanvas = () => {
+    const canvasRef = useRef(null);
+
+    useEffect(() => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      let animationFrameId;
+      
+      const handleResize = () => {
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = canvas.parentElement.clientHeight || 500;
+      };
+      
+      window.addEventListener('resize', handleResize);
+      handleResize();
+
+      let particles = [];
+      const particleCount = 40;
+
+      for (let i = 0; i < particleCount; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          size: Math.random() * 3 + 1,
+          speedX: (Math.random() - 0.5) * 0.8,
+          speedY: (Math.random() - 0.5) * 0.8,
+          angle: Math.random() * Math.PI * 2,
+          angleSpeed: (Math.random() - 0.5) * 0.02
+        });
+      }
+
+      const drawLines = () => {
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.04)';
+        ctx.lineWidth = 1;
+        for (let i = 0; i < particles.length; i++) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const dx = particles[i].x - particles[j].x;
+            const dy = particles[i].y - particles[j].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 180) {
+              ctx.beginPath();
+              ctx.moveTo(particles[i].x, particles[i].y);
+              ctx.lineTo(particles[j].x, particles[j].y);
+              ctx.stroke();
+            }
+          }
+        }
+      };
+
+      const animate = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // 현대적인 도트 격자 무늬 배경 그리기
+        ctx.fillStyle = 'rgba(0,0,0,0.02)';
+        const gap = 30;
+        for (let x = 0; x < canvas.width; x += gap) {
+          for (let y = 0; y < canvas.height; y += gap) {
+            ctx.fillRect(x, y, 2, 2);
+          }
+        }
+
+        particles.forEach((p) => {
+          p.x += p.speedX;
+          p.y += p.speedY;
+          p.angle += p.angleSpeed;
+
+          if (p.x < 0 || p.x > canvas.width) p.speedX *= -1;
+          if (p.y < 0 || p.y > canvas.height) p.speedY *= -1;
+
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.angle);
+          
+          // 모션그래픽 디자이너를 나타내는 큐브/도형 파티클 렌더링
+          ctx.strokeStyle = 'rgba(0, 0, 0, 0.12)';
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.03)';
+          ctx.lineWidth = 1;
+          
+          if (p.size > 2) {
+            ctx.strokeRect(-p.size * 3, -p.size * 3, p.size * 6, p.size * 6);
+          } else {
+            ctx.beginPath();
+            ctx.arc(0, 0, p.size * 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+          }
+          ctx.restore();
+        });
+
+        drawLines();
+        animationFrameId = requestAnimationFrame(animate);
+      };
+
+      animate();
+
+      return () => {
+        window.removeEventListener('resize', handleResize);
+        cancelAnimationFrame(animationFrameId);
+      };
+    }, []);
+
+    return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" />;
+  };
+
+
+  return (
+    <div className="min-h-screen bg-[#FAF9F6] text-[#111111] font-sans selection:bg-[#111111] selection:text-white relative overflow-x-hidden flex flex-col justify-between">
+      
+      {/* HEADER SECTION (참조 이미지 상단 디자인 완벽 반영) */}
+      <header className="border-b border-[#E5E4E0] sticky top-0 bg-[#FAF9F6]/90 backdrop-blur-md z-40 px-6 py-6 md:px-12 flex justify-between items-center transition-all">
+        <button 
+          onClick={() => setCurrentPage('home')} 
+          className="text-lg font-black tracking-widest text-[#111111] hover:opacity-70 transition-opacity"
+        >
+          HANTURI PORTFOLIO
+        </button>
+        
+        <nav className="hidden md:flex space-x-12">
+          {['WORKS', 'ABOUT', 'BLOG', 'CONTACT'].map((item) => {
+            const pageVal = item.toLowerCase();
+            const isActive = currentPage === pageVal || (pageVal === 'works' && currentPage === 'work');
+            return (
+              <button 
+                key={item} 
+                onClick={() => setCurrentPage(pageVal === 'works' ? 'work' : pageVal)}
+                className={`text-xs font-bold tracking-widest transition-all hover:text-black relative py-1 ${
+                  isActive ? 'text-black font-black' : 'text-[#777777]'
+                }`}
+              >
+                {item}
+                {isActive && (
+                  <span className="absolute bottom-0 left-0 w-full h-[2px] bg-black transition-all duration-300" />
+                )}
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* 모바일 햄버거 메뉴 및 상태 표시 단추 */}
+        <div className="flex items-center space-x-4">
+          <button 
+            onClick={() => setShowConfigPanel(!showConfigPanel)}
+            className={`p-2 rounded-full border transition-all duration-300 relative ${
+              dbStatus === 'connected' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-[#E5E4E0] hover:bg-[#F2F1EC]'
+            }`}
+            title="Supabase 데이터베이스 연동 패널"
+          >
+            <Settings size={18} className={`${loading ? 'animate-spin' : ''}`} />
+            {dbStatus === 'connected' && (
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse" />
+            )}
+          </button>
+          
+          <div className="md:hidden flex space-x-2">
+            <button 
+              onClick={() => setCurrentPage(currentPage === 'home' ? 'work' : 'home')} 
+              className="text-xs font-bold px-3 py-1.5 border border-black rounded-sm"
+            >
+              {currentPage === 'home' ? 'MENU' : 'HOME'}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* MOBILE NAV (화면이 작을 때 상단 네비게이션 대체) */}
+      <div className="md:hidden flex justify-around bg-[#FAF9F6] border-b border-[#E5E4E0] py-3 text-[10px] tracking-widest font-bold text-[#777777]">
+        <button onClick={() => setCurrentPage('home')} className={currentPage === 'home' ? 'text-black font-extrabold' : ''}>HOME</button>
+        <button onClick={() => setCurrentPage('work')} className={currentPage === 'work' ? 'text-black font-extrabold' : ''}>WORKS</button>
+        <button onClick={() => setCurrentPage('about')} className={currentPage === 'about' ? 'text-black font-extrabold' : ''}>ABOUT</button>
+        <button onClick={() => setCurrentPage('blog')} className={currentPage === 'blog' ? 'text-black font-extrabold' : ''}>BLOG</button>
+        <button onClick={() => setCurrentPage('contact')} className={currentPage === 'contact' ? 'text-black font-extrabold' : ''}>CONTACT</button>
+      </div>
+
+      {/* MAIN BODY AREA */}
+      <main className="flex-grow">
+        
+        {/* =======================================================
+            PAGE 1: HOME PAGE (참조 이미지 'SEOHYUN KIM' 완벽 복제본) 
+            ======================================================= */}
+        {currentPage === 'home' && (
+          <div className="relative animate-fadeIn">
+            {/* 배경 기하학 모션 그래픽 데코 */}
+            <MotionCanvas />
+            
+            <div className="max-w-[1440px] mx-auto px-6 md:px-12 pt-16 pb-24 relative z-10">
+              
+              {/* Divider 001 */}
+              <div className="flex items-center space-x-4 mb-8">
+                <span className="text-xs font-mono text-[#777777] tracking-widest">001</span>
+                <div className="h-[1px] bg-[#E5E4E0] flex-grow" />
+              </div>
+
+              {/* HERO BANNER TEXT (Supabase site_settings 의 main_banner_text 연동 영역) */}
+              <div className="py-8 md:py-16">
+                <h1 className="text-[10vw] md:text-[6.5vw] font-extrabold tracking-tighter leading-[0.9] uppercase text-black max-w-[1200px]">
+                  {bannerText}
+                </h1>
+              </div>
+
+              {/* Divider 002 */}
+              <div className="flex items-center space-x-4 mb-16">
+                <span className="text-xs font-mono text-[#777777] tracking-widest">002</span>
+                <div className="h-[1px] bg-[#E5E4E0] flex-grow" />
+              </div>
+
+              {/* BOTTOM SPLIT GRID (참조 이미지 레이아웃 이식) */}
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-6 mt-6">
+                
+                {/* Left Side: Specialized Area List */}
+                <div className="md:col-span-4 flex flex-col justify-between space-y-6">
+                  <div className="space-y-3">
+                    <p className="text-[10px] tracking-[0.25em] text-[#777777] font-bold">KEY EXPERTISE</p>
+                    <div className="space-y-2 text-md font-extrabold tracking-wider">
+                      <p className="hover:translate-x-2 transition-transform duration-300 flex items-center">
+                        <span className="w-1.5 h-1.5 bg-black rounded-full mr-2" />
+                        MOTION GRAPHICS DESIGN
+                      </p>
+                      <p className="hover:translate-x-2 transition-transform duration-300 flex items-center">
+                        <span className="w-1.5 h-1.5 bg-black rounded-full mr-2" />
+                        3D CGI & VFX CREATIVE
+                      </p>
+                      <p className="hover:translate-x-2 transition-transform duration-300 flex items-center">
+                        <span className="w-1.5 h-1.5 bg-black rounded-full mr-2" />
+                        AI GENERATIVE ARTWORK
+                      </p>
+                      <p className="hover:translate-x-2 transition-transform duration-300 flex items-center">
+                        <span className="w-1.5 h-1.5 bg-black rounded-full mr-2" />
+                        INTERACTIVE DIGITAL MEDIA
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Middle: Short intro or statement */}
+                <div className="md:col-span-4 flex flex-col justify-end">
+                  <p className="text-sm text-[#555555] leading-relaxed md:max-w-[340px] font-medium">
+                    스토리와 모션을 결합하여 감각적인 시각 경험을 설계합니다. After Effects와 Blender를 주축으로, 최신 AI 툴킷을 결합한 유기적이고 혁신적인 3D 디지털 영상을 창조합니다.
+                  </p>
+                </div>
+
+                {/* Right Side: Navigation Direct Button */}
+                <div className="md:col-span-4 flex flex-col justify-end items-start md:items-end">
+                  <button 
+                    onClick={() => setCurrentPage('work')}
+                    className="group border border-black hover:bg-black hover:text-white transition-all duration-300 px-6 py-4 flex items-center space-x-6 text-xs font-bold tracking-widest mt-6 md:mt-0"
+                  >
+                    <span>EXPLORE WORKS</span>
+                    <ArrowRight size={16} className="group-hover:translate-x-2 transition-transform" />
+                  </button>
+                </div>
+              </div>
+
+              {/* SCROLL DECORATIVE INDICATOR */}
+              <div className="hidden md:flex justify-between items-center mt-32 text-[10px] tracking-[0.2em] font-extrabold text-[#777777]">
+                <p>© 2026 HANTURI PORTFOLIO</p>
+                <button onClick={() => setCurrentPage('work')} className="flex items-center space-x-2 hover:text-black">
+                  <span>DISCOVER MORE</span>
+                  <span className="animate-bounce font-mono">↓</span>
+                </button>
+              </div>
+
+            </div>
+          </div>
+        )}
+
+        {/* =======================================================
+            PAGE 2: ABOUT PAGE (디자이너 프로필 및 스택) 
+            ======================================================= */}
+        {currentPage === 'about' && (
+          <div className="max-w-[1440px] mx-auto px-6 md:px-12 py-16 animate-fadeIn">
+            
+            <div className="flex items-center space-x-4 mb-12">
+              <span className="text-xs font-mono text-[#777777] tracking-widest">ABOUT</span>
+              <div className="h-[1px] bg-[#E5E4E0] flex-grow" />
+              <span className="text-xs font-mono text-[#777777] tracking-widest">01 / 03</span>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
+              
+              {/* 왼쪽: 미니멀한 대형 이름과 사진 데코 */}
+              <div className="lg:col-span-5 space-y-8">
+                <div className="space-y-2">
+                  <p className="text-xs font-bold tracking-[0.3em] text-[#777777] uppercase">MOTION GRAPHICS DESIGNER</p>
+                  <h2 className="text-5xl md:text-6xl font-black tracking-tight text-black">한튜리</h2>
+                  <p className="text-lg text-neutral-500 font-medium">Hanturi (Hanturi Portfolio)</p>
+                </div>
+                
+                {/* 흑백 톤의 시크한 기하학 프레임 이미지 플레이스홀더 */}
+                <div className="relative aspect-[4/5] bg-neutral-200 overflow-hidden border border-neutral-300">
+                  <img 
+                    src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80" 
+                    alt="Hanturi Designer Workspace" 
+                    className="w-full h-full object-cover grayscale contrast-125 brightness-90 hover:scale-105 transition-transform duration-700"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
+                  <div className="absolute bottom-6 left-6 text-white text-xs font-mono tracking-widest">
+                    SEOUL, SOUTH KOREA
+                  </div>
+                </div>
+              </div>
+
+              {/* 오른쪽: 상세 정보 및 툴 스택 */}
+              <div className="lg:col-span-7 space-y-12">
+                
+                <div className="space-y-6">
+                  <h3 className="text-xl font-bold tracking-widest uppercase text-black border-b border-[#E5E4E0] pb-2">PHILOSOPHY</h3>
+                  <p className="text-neutral-700 leading-relaxed font-medium text-md">
+                    정지된 디자인에 흐름과 율동을 더해 살아 숨 쉬는 서사로 바꾸는 일을 합니다. 
+                    단순한 데코레이션을 넘어 핵심 메시지를 관객에게 시각적 파동으로 전파하는 모션 시스템을 고민합니다. 
+                    최신 블렌더 3D 엔진과 모던 레이아웃, 인공지능 보조 툴킷을 적재적소에 배합하여 극도의 몰입도를 자랑하는 프레임 아트를 완성해 내는 것을 지향합니다.
+                  </p>
+                </div>
+
+                {/* 기술 스택 영역 (사용 툴) */}
+                <div className="space-y-6">
+                  <h3 className="text-xl font-bold tracking-widest uppercase text-black border-b border-[#E5E4E0] pb-2">TECHNICAL TOOLKIT</h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <div className="border border-[#E5E4E0] p-4 bg-white hover:shadow-sm transition-shadow">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-bold text-sm tracking-widest">ADOBE AFTER EFFECTS</span>
+                        <span className="text-xs font-mono text-neutral-400">95%</span>
+                      </div>
+                      <div className="w-full h-[3px] bg-neutral-100">
+                        <div className="h-full bg-black" style={{ width: '95%' }} />
+                      </div>
+                      <p className="text-xs text-neutral-400 mt-2">키네틱 타이포그래피, 모션 그래픽스, 합성 및 시각 효과</p>
+                    </div>
+
+                    <div className="border border-[#E5E4E0] p-4 bg-white hover:shadow-sm transition-shadow">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-bold text-sm tracking-widest">BLENDER 3D</span>
+                        <span className="text-xs font-mono text-neutral-400">88%</span>
+                      </div>
+                      <div className="w-full h-[3px] bg-neutral-100">
+                        <div className="h-full bg-black" style={{ width: '88%' }} />
+                      </div>
+                      <p className="text-xs text-neutral-400 mt-2">3D 모델링, 셰이딩, 노드 기반 모션 그래픽 & 다이내믹 루프</p>
+                    </div>
+
+                    <div className="border border-[#E5E4E0] p-4 bg-white hover:shadow-sm transition-shadow">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-bold text-sm tracking-widest">PHOTOSHOP & ILLUSTRATOR</span>
+                        <span className="text-xs font-mono text-neutral-400">90%</span>
+                      </div>
+                      <div className="w-full h-[3px] bg-neutral-100">
+                        <div className="h-full bg-black" style={{ width: '90%' }} />
+                      </div>
+                      <p className="text-xs text-neutral-400 mt-2">에셋 드로잉, 텍스처 맵 디자인, 고해상도 그래픽 레이아웃</p>
+                    </div>
+
+                    <div className="border border-[#E5E4E0] p-4 bg-white hover:shadow-sm transition-shadow">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-bold text-sm tracking-widest">AI CREATIVE ENGINE</span>
+                        <span className="text-xs font-mono text-neutral-400">80%</span>
+                      </div>
+                      <div className="w-full h-[3px] bg-neutral-100">
+                        <div className="h-full bg-black" style={{ width: '80%' }} />
+                      </div>
+                      <p className="text-xs text-neutral-400 mt-2">생성형 비디오 활용, AI 텍스처 업스케일링 및 컨셉 드로잉</p>
+                    </div>
+
+                  </div>
+                </div>
+
+                {/* 경력 / 연혁 */}
+                <div className="space-y-6">
+                  <h3 className="text-xl font-bold tracking-widest uppercase text-black border-b border-[#E5E4E0] pb-2">EXPERIENCE TIMELINE</h3>
+                  <div className="space-y-4 font-medium text-sm">
+                    <div className="flex flex-col md:flex-row justify-between border-b border-dashed border-neutral-200 pb-2">
+                      <span className="font-bold">FREE LANCE MOTION DESIGN DIRECTOR</span>
+                      <span className="text-neutral-500 font-mono">2024 - PRESENT</span>
+                    </div>
+                    <div className="flex flex-col md:flex-row justify-between border-b border-dashed border-neutral-200 pb-2">
+                      <span className="font-bold">CREATIVE DIGITAL STUDIO / SENIOR LEAD</span>
+                      <span className="text-neutral-500 font-mono">2022 - 2024</span>
+                    </div>
+                    <div className="flex flex-col md:flex-row justify-between border-b border-dashed border-neutral-200 pb-2">
+                      <span className="font-bold">MOTION DESIGN AWARD WINNERS</span>
+                      <span className="text-neutral-500 font-mono">2023, 2025</span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+        )}
+
+        {/* =======================================================
+            PAGE 3: WORKS PAGE (Supabase 연동 + 그리드 뷰) 
+            ======================================================= */}
+        {currentPage === 'work' && (
+          <div className="max-w-[1440px] mx-auto px-6 md:px-12 py-16 animate-fadeIn">
+            
+            <div className="flex justify-between items-end mb-12">
+              <div className="space-y-2">
+                <p className="text-xs font-bold tracking-[0.3em] text-[#777777] uppercase">SELECTED WORKS</p>
+                <h2 className="text-4xl font-black tracking-tight text-black">PROJECT PORTFOLIO</h2>
+              </div>
+              <div className="text-xs text-neutral-500 font-mono hidden md:block">
+                TOTAL: {projects.length} PROJECTS
+              </div>
+            </div>
+
+            {/* Supabase 연동 상태에 따른 인포 배너 (매우 직관적이고 친절한 UI) */}
+            <div className="mb-12 p-4 border rounded-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white">
+              <div className="flex items-center space-x-3">
+                {dbStatus === 'connected' ? (
+                  <>
+                    <CheckCircle className="text-emerald-500" size={20} />
+                    <div>
+                      <p className="text-xs font-bold text-emerald-800">Supabase 실시간 데이터베이스 동기화 중</p>
+                      <p className="text-[11px] text-neutral-500">현재 웹사이트 화면은 사용자의 Supabase Cloud DB에서 직접 불러온 데이터를 표시하고 있습니다.</p>
+                    </div>
+                  </>
+                ) : dbStatus === 'demo' ? (
+                  <>
+                    <Grid className="text-neutral-400" size={20} />
+                    <div>
+                      <p className="text-xs font-bold text-neutral-700">데모(폴백) 임시 로컬 데이터를 표시 중</p>
+                      <p className="text-[11px] text-neutral-400">아직 Supabase 연동 설정이 되지 않았습니다. 우측 설정 아이콘을 누르고 URL과 API Key를 입력하여 실시간 연동해 보세요!</p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <AlertCircle className="text-rose-500" size={20} />
+                    <div>
+                      <p className="text-xs font-bold text-rose-800">Supabase 데이터 로드 도중 통신 장애가 발생했습니다.</p>
+                      <p className="text-[11px] text-neutral-400">연동 자격 증명을 다시 확인해 주시기 바랍니다. 기본 로컬 폴백 데이터로 임시 전환되었습니다.</p>
+                    </div>
+                  </>
+                )}
+              </div>
+              
+              <div className="flex space-x-2">
+                <button 
+                  onClick={() => setShowConfigPanel(true)}
+                  className="text-xs font-bold border border-neutral-300 hover:bg-neutral-50 px-3 py-1.5 rounded-sm flex items-center space-x-2"
+                >
+                  <Settings size={14} />
+                  <span>연동 설정 변경</span>
+                </button>
+              </div>
+            </div>
+
+            {/* WORKS GRID VIEW (미니멀 격자형 명품 레이아웃) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+              {projects.map((project, idx) => (
+                <div key={project.id || idx} className="group border-b border-[#E5E4E0] pb-8 block cursor-pointer">
+                  
+                  {/* 카드형 비주얼 이미지 */}
+                  <div className="relative aspect-video bg-neutral-100 overflow-hidden mb-6 border border-neutral-200">
+                    <img 
+                      src={project.image_url || "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=800&q=80"} 
+                      alt={project.title} 
+                      className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700 ease-out"
+                    />
+                    <div className="absolute top-4 right-4 bg-black/80 backdrop-blur-sm text-white text-[10px] tracking-widest font-bold py-1 px-3">
+                      {project.year || "2026"}
+                    </div>
+                    {/* 호버 시 모션 플레이 데코 효과 */}
+                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <div className="bg-white/90 p-4 rounded-full text-black transform scale-90 group-hover:scale-100 transition-transform duration-300">
+                        <Play size={20} fill="black" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 세부 메타 정보 */}
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-2 max-w-[80%]">
+                      <div className="flex flex-wrap gap-2">
+                        {project.tags && Array.isArray(project.tags) ? (
+                          project.tags.map(tag => (
+                            <span key={tag} className="text-[10px] font-mono tracking-wider border border-neutral-300 px-2 py-0.5 text-neutral-500 rounded-full">
+                              {tag}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-[10px] font-mono tracking-wider border border-neutral-300 px-2 py-0.5 text-neutral-500 rounded-full">
+                            MOTION GRAPHICS
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="text-xl font-bold tracking-tight text-neutral-900 group-hover:text-black group-hover:translate-x-1 transition-all">
+                        {project.title}
+                      </h3>
+                      <p className="text-sm text-neutral-500 leading-relaxed font-medium">
+                        {project.description}
+                      </p>
+                    </div>
+
+                    <div className="p-2 border border-[#E5E4E0] group-hover:bg-black group-hover:text-white transition-all rounded-full">
+                      <ArrowUpRight size={16} />
+                    </div>
+                  </div>
+
+                </div>
+              ))}
+            </div>
+
+          </div>
+        )}
+
+        {/* =======================================================
+            PAGE 4: BLOG PAGE (소셜 스트리밍 피드) 
+            ======================================================= */}
+        {currentPage === 'blog' && (
+          <div className="max-w-[1440px] mx-auto px-6 md:px-12 py-16 animate-fadeIn">
+            
+            <div className="flex justify-between items-end mb-12">
+              <div className="space-y-2">
+                <p className="text-xs font-bold tracking-[0.3em] text-[#777777] uppercase">SOCIAL SYNC HUB</p>
+                <h2 className="text-4xl font-black tracking-tight text-black">LIVE BLOG & CHANNELS</h2>
+              </div>
+              <button 
+                onClick={triggerFeedRefresh}
+                className="text-xs font-bold border border-neutral-300 hover:bg-neutral-50 px-3 py-1.5 rounded-sm flex items-center space-x-2 transition-all"
+              >
+                <RefreshCw size={14} className={isRefreshingFeed ? 'animate-spin' : ''} />
+                <span>새로고침</span>
+              </button>
+            </div>
+
+            {/* 필터 탭 */}
+            <div className="flex flex-wrap gap-3 mb-12 border-b border-[#E5E4E0] pb-6">
+              {[
+                { name: 'ALL CHANNELS', value: 'all', icon: Grid },
+                { name: 'INSTAGRAM', value: 'instagram', icon: Instagram },
+                { name: 'X / TWITTER', value: 'twitter', icon: Twitter },
+                { name: 'YOUTUBE', value: 'youtube', icon: Youtube }
+              ].map((tab) => {
+                const Icon = tab.icon;
+                const isActive = socialFilter === tab.value;
+                return (
+                  <button
+                    key={tab.value}
+                    onClick={() => setSocialFilter(tab.value)}
+                    className={`flex items-center space-x-2 text-xs font-bold tracking-widest px-4 py-2 border rounded-full transition-all ${
+                      isActive 
+                        ? 'bg-black text-white border-black' 
+                        : 'bg-white border-neutral-200 hover:bg-neutral-50 text-neutral-500'
+                    }`}
+                  >
+                    <Icon size={14} />
+                    <span>{tab.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* 소셜 피드 스트리밍 뷰 */}
+            {isRefreshingFeed ? (
+              <div className="py-24 text-center space-y-4">
+                <RefreshCw size={40} className="animate-spin mx-auto text-neutral-300" />
+                <p className="text-xs tracking-widest text-neutral-400 font-bold">인스타그램 및 X(트위터) 실시간 동기화 정보 수신 중...</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {filteredFeeds.map((feed) => (
+                  <div 
+                    key={feed.id} 
+                    className="border border-[#E5E4E0] bg-white hover:shadow-md transition-shadow duration-300 flex flex-col justify-between"
+                  >
+                    <div>
+                      {/* 카드 헤더 */}
+                      <div className="p-4 border-b border-neutral-100 flex justify-between items-center bg-neutral-50/50">
+                        <div className="flex items-center space-x-2.5">
+                          {feed.platform === 'instagram' && <Instagram size={16} className="text-pink-600" />}
+                          {feed.platform === 'twitter' && <Twitter size={16} className="text-neutral-800" />}
+                          {feed.platform === 'youtube' && <Youtube size={16} className="text-red-600" />}
+                          <span className="text-xs font-extrabold text-neutral-800">{feed.username}</span>
+                        </div>
+                        <span className="text-[11px] font-mono text-neutral-400">{feed.date}</span>
+                      </div>
+
+                      {/* 이미지 있는 경우 */}
+                      {feed.image && (
+                        <div className="aspect-square bg-neutral-100 overflow-hidden border-b border-neutral-100">
+                          <img 
+                            src={feed.image} 
+                            alt="Social media content" 
+                            className="w-full h-full object-cover" 
+                          />
+                        </div>
+                      )}
+
+                      {/* 본문 텍스트 */}
+                      <div className="p-5">
+                        <p className="text-xs text-neutral-600 leading-relaxed font-medium">
+                          {feed.content}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* 카드 푸터 (좋아요, 원본 보기 연동 단추) */}
+                    <div className="px-5 py-4 border-t border-neutral-100 flex justify-between items-center text-[11px] font-bold text-neutral-400 bg-neutral-50/50">
+                      <div className="flex space-x-4">
+                        <span>좋아요 {feed.likes}</span>
+                        <span>댓글 {feed.comments}</span>
+                      </div>
+                      
+                      <a 
+                        href={`https://${feed.platform}.com`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-black hover:opacity-60 flex items-center space-x-1"
+                      >
+                        <span>원문 보기</span>
+                        <ExternalLink size={10} />
+                      </a>
+                    </div>
+
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* 소셜 채널 연동에 대한 설명 가이드라인 */}
+            <div className="mt-16 p-6 border border-dashed border-neutral-300 rounded-sm text-center max-w-[700px] mx-auto bg-[#FAF9F6]">
+              <h4 className="text-sm font-bold tracking-widest text-neutral-800 mb-2 uppercase">SOCIAL API INTEGRATION GUIDE</h4>
+              <p className="text-xs text-neutral-500 leading-relaxed font-medium">
+                본 웹사이트의 소셜 피드는 바이브 코딩 아키텍처에 맞춘 시뮬레이션 허브입니다. 실제 인스타그램, X API 혹은 RSS Feed 파서를 백엔드 서버리스 펑션에 연결하여 완전히 자동화된 크롤러를 구동할 수도 있습니다.
+              </p>
+            </div>
+
+          </div>
+        )}
+
+        {/* =======================================================
+            PAGE 5: CONTACT PAGE (메일 및 소셜 네트워크) 
+            ======================================================= */}
+        {currentPage === 'contact' && (
+          <div className="max-w-[1440px] mx-auto px-6 md:px-12 py-16 animate-fadeIn">
+            
+            <div className="flex items-center space-x-4 mb-12">
+              <span className="text-xs font-mono text-[#777777] tracking-widest">CONTACT</span>
+              <div className="h-[1px] bg-[#E5E4E0] flex-grow" />
+              <span className="text-xs font-mono text-[#777777] tracking-widest">03 / 03</span>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
+              
+              {/* 왼쪽: 직접 소통 방식 정보 */}
+              <div className="lg:col-span-5 space-y-8">
+                <div className="space-y-3">
+                  <p className="text-xs font-bold tracking-[0.3em] text-[#777777] uppercase">COLLABORATION & INQUIRY</p>
+                  <h2 className="text-4xl md:text-5xl font-black tracking-tight leading-none text-black">START A PROJECT</h2>
+                </div>
+                
+                <p className="text-sm text-neutral-600 leading-relaxed font-medium">
+                  모션 그래픽 3D 외주 프로젝트, 브랜드 콜라보레이션 혹은 기술 강연 제안에 대해 언제든 열려있습니다. 아래 채널 또는 이메일로 연락주시면 24시간 내에 답변 드리겠습니다.
+                </p>
+
+                <div className="space-y-6 pt-4">
+                  
+                  {/* 이메일 주소 */}
+                  <div className="border border-[#E5E4E0] p-4 bg-white flex justify-between items-center">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 bg-neutral-100 rounded-sm">
+                        <Mail size={18} />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">DIRECT MAIL</p>
+                        <p className="text-sm font-extrabold text-neutral-900">contact@hanturi.work</p>
+                      </div>
+                    </div>
+                    <a 
+                      href="mailto:contact@hanturi.work" 
+                      className="p-2 border border-black hover:bg-black hover:text-white transition-all rounded-full"
+                    >
+                      <ArrowRight size={14} />
+                    </a>
+                  </div>
+
+                  {/* SNS 목록 */}
+                  <div className="space-y-3">
+                    <p className="text-xs font-bold tracking-[0.25em] text-[#777777] uppercase">NETWORKS & SOCIALS</p>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <a 
+                        href="https://instagram.com" 
+                        target="_blank" 
+                        rel="noreferrer" 
+                        className="border border-[#E5E4E0] bg-white hover:bg-neutral-50 p-3 flex items-center space-x-3 text-xs font-bold tracking-wider"
+                      >
+                        <Instagram size={16} />
+                        <span>INSTAGRAM</span>
+                      </a>
+                      
+                      <a 
+                        href="https://x.com" 
+                        target="_blank" 
+                        rel="noreferrer" 
+                        className="border border-[#E5E4E0] bg-white hover:bg-neutral-50 p-3 flex items-center space-x-3 text-xs font-bold tracking-wider"
+                      >
+                        <Twitter size={16} />
+                        <span>X / TWITTER</span>
+                      </a>
+
+                      <a 
+                        href="https://youtube.com" 
+                        target="_blank" 
+                        rel="noreferrer" 
+                        className="border border-[#E5E4E0] bg-white hover:bg-neutral-50 p-3 flex items-center space-x-3 text-xs font-bold tracking-wider"
+                      >
+                        <Youtube size={16} />
+                        <span>YOUTUBE</span>
+                      </a>
+
+                      <span 
+                        className="border border-[#E5E4E0] bg-white p-3 flex items-center space-x-3 text-xs font-bold tracking-wider text-neutral-400 cursor-default"
+                      >
+                        <Sparkles size={16} />
+                        <span>DISCORD</span>
+                      </span>
+                    </div>
+
+                  </div>
+
+                </div>
+              </div>
+
+              {/* 오른쪽: 메일 전송 모의 폼 */}
+              <div className="lg:col-span-7 bg-white border border-[#E5E4E0] p-8 md:p-10 shadow-sm">
+                <h3 className="text-xl font-bold tracking-widest text-black mb-8 border-b border-[#E5E4E0] pb-4">SEND MESSAGE</h3>
+                
+                {contactSuccess ? (
+                  <div className="py-12 text-center space-y-4">
+                    <div className="p-4 bg-emerald-50 text-emerald-600 rounded-full w-16 h-16 flex items-center justify-center mx-auto">
+                      <CheckCircle size={32} />
+                    </div>
+                    <h4 className="text-lg font-bold text-neutral-800">성공적으로 발송되었습니다!</h4>
+                    <p className="text-xs text-neutral-500 max-w-[340px] mx-auto leading-relaxed font-medium">
+                      전송해 주신 메일은 contact@hanturi.work 메일 주소로 연동되어 정상 전달되었습니다. 검토 후 빠른 시일 내에 답장해 드리겠습니다.
+                    </p>
+                    <button 
+                      onClick={() => setContactSuccess(false)}
+                      className="text-xs font-bold border border-black px-4 py-2 hover:bg-black hover:text-white transition-all"
+                    >
+                      다시 문의하기
+                    </button>
+                  </div>
+                ) : (
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!contactName || !contactEmail || !contactMessage) {
+                      alert("모든 필수 기재란을 채워주세요.");
+                      return;
+                    }
+                    setContactSuccess(true);
+                  }} className="space-y-6">
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] tracking-widest font-extrabold text-neutral-400 uppercase">성함 (NAME) *</label>
+                        <input 
+                          type="text" 
+                          required
+                          value={contactName}
+                          onChange={(e) => setContactName(e.target.value)}
+                          placeholder="Your Name"
+                          className="w-full bg-[#FAF9F6] border border-neutral-200 focus:border-black focus:outline-none p-3.5 text-xs font-bold"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label className="text-[10px] tracking-widest font-extrabold text-neutral-400 uppercase">이메일 주소 (EMAIL) *</label>
+                        <input 
+                          type="email" 
+                          required
+                          value={contactEmail}
+                          onChange={(e) => setContactEmail(e.target.value)}
+                          placeholder="your-email@example.com"
+                          className="w-full bg-[#FAF9F6] border border-neutral-200 focus:border-black focus:outline-none p-3.5 text-xs font-bold"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] tracking-widest font-extrabold text-neutral-400 uppercase">문의 상세 내용 (MESSAGE) *</label>
+                      <textarea 
+                        rows={6}
+                        required
+                        value={contactMessage}
+                        onChange={(e) => setContactMessage(e.target.value)}
+                        placeholder="프로젝트 일정, 예상 견적, 모션 기획 레퍼런스 등을 간략히 적어주시면 상세한 안내가 가능합니다."
+                        className="w-full bg-[#FAF9F6] border border-neutral-200 focus:border-black focus:outline-none p-3.5 text-xs font-medium leading-relaxed"
+                      />
+                    </div>
+
+                    <button 
+                      type="submit"
+                      className="w-full bg-black text-white hover:bg-neutral-800 transition-all font-bold tracking-widest text-xs py-4 flex justify-center items-center space-x-3"
+                    >
+                      <span>SEND INQUIRY</span>
+                      <ArrowRight size={14} />
+                    </button>
+
+                  </form>
+                )}
+
+              </div>
+
+            </div>
+
+          </div>
+        )}
+
+      </main>
+
+      {/* =======================================================
+          SLIDE-UP DEVELOPMENT PANEL (SUPABASE QUICK CONNECTOR) 
+          바이브 코딩 시 직접 주소와 API키를 입력하여 뷰를 갱신할 수 있는 특급 도구
+          ======================================================= */}
+      {showConfigPanel && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-all duration-300">
+          <div className="bg-[#FAF9F6] border border-neutral-300 shadow-2xl p-6 md:p-8 rounded-sm max-w-[500px] w-full space-y-6 relative animate-scaleIn">
+            
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="text-md font-black tracking-widest uppercase text-black">Supabase DB 실시간 커넥터</h3>
+                <p className="text-[11px] text-neutral-400 mt-1">클라우드 데이터베이스에 연동하여 포트폴리오 정보를 실시간 변경해 보세요.</p>
+              </div>
+              <button 
+                onClick={() => setShowConfigPanel(false)} 
+                className="text-xs font-bold border border-neutral-300 hover:bg-neutral-100 p-1 rounded-sm"
+              >
+                닫기
+              </button>
+            </div>
+
+            <form onSubmit={handleConnectSupabase} className="space-y-4">
+              
+              <div className="space-y-2">
+                <label className="text-[10px] tracking-widest font-extrabold text-neutral-500 uppercase">Supabase Project URL</label>
+                <input 
+                  type="text"
+                  value={supabaseUrl}
+                  onChange={(e) => setSupabaseUrl(e.target.value)}
+                  placeholder="https://your-project-id.supabase.co"
+                  className="w-full bg-white border border-neutral-300 focus:border-black focus:outline-none p-3 text-xs font-bold"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] tracking-widest font-extrabold text-neutral-500 uppercase">anon public API Key</label>
+                <input 
+                  type="password"
+                  value={supabaseAnonKey}
+                  onChange={(e) => setSupabaseAnonKey(e.target.value)}
+                  placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  className="w-full bg-white border border-neutral-300 focus:border-black focus:outline-none p-3 text-xs font-mono"
+                />
+              </div>
+
+              <div className="pt-2 flex space-x-2">
+                <button 
+                  type="submit"
+                  disabled={loading}
+                  className="flex-grow bg-black text-white hover:bg-neutral-800 transition-all font-bold tracking-widest text-xs py-3 rounded-sm flex justify-center items-center space-x-2"
+                >
+                  <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+                  <span>{loading ? '연동 테스트 중...' : '데이터베이스 연결'}</span>
+                </button>
+
+                {dbStatus === 'connected' && (
+                  <button 
+                    type="button"
+                    onClick={handleDisconnect}
+                    className="border border-rose-300 hover:bg-rose-50 text-rose-600 font-bold text-xs px-4 py-3 rounded-sm"
+                  >
+                    연결 해제
+                  </button>
+                )}
+              </div>
+
+            </form>
+
+            <div className="border-t border-neutral-200 pt-4 bg-neutral-50 p-3 text-[11px] text-neutral-500 leading-relaxed font-medium space-y-2">
+              <p className="font-extrabold text-neutral-700">💡 바이브 코딩 연동 가이드</p>
+              <p>1. Supabase 콘솔에서 <code className="font-bold">projects</code> 테이블을 만들고 칼럼으로 <code className="font-bold">title</code>, <code className="font-bold">description</code>, <code className="font-bold">image_url</code>, <code className="font-bold">tags</code>, <code className="font-bold">year</code>를 설정해 데이터를 대입하세요.</p>
+              <p>2. <code className="font-bold">site_settings</code> 테이블을 만들고 <code className="font-bold">key: main_banner_text</code>, <code className="font-bold">value: (노출할 대형 배너명)</code>을 대입하세요.</p>
+              <p>3. 로컬 테스트 단계 이후 최종 Vercel 배포 시, 이 설정창의 키와 값을 대시보드 내의 <code className="font-bold">VITE_SUPABASE_URL</code> 및 <code className="font-bold">VITE_SUPABASE_ANON_KEY</code> 환경 변수에 주입하면 자동 상시 연동됩니다.</p>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* FOOTER SECTION */}
+      <footer className="border-t border-[#E5E4E0] py-8 text-center text-xs text-neutral-400 font-medium bg-[#FAF9F6]">
+        <div className="max-w-[1440px] mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p>© 2026 HANTURI PORTFOLIO. All rights reserved.</p>
+          <div className="flex space-x-6 text-[10px] tracking-widest font-extrabold text-neutral-500">
+            <button onClick={() => setCurrentPage('home')} className="hover:text-black">HOME</button>
+            <button onClick={() => setCurrentPage('work')} className="hover:text-black">WORKS</button>
+            <button onClick={() => setCurrentPage('about')} className="hover:text-black">ABOUT</button>
+            <button onClick={() => setCurrentPage('blog')} className="hover:text-black">BLOG</button>
+            <button onClick={() => setCurrentPage('contact')} className="hover:text-black">CONTACT</button>
+          </div>
+        </div>
+      </footer>
+
+      {/* Tailwind 추가용 애니메이션 키프레임 인라인 스타일 */}
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes scaleIn {
+          from { opacity: 0; transform: scale(0.95); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .animate-scaleIn {
+          animation: scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+      `}</style>
+
+    </div>
+  );
+}
